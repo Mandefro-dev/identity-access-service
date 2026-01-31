@@ -78,9 +78,50 @@ export const verifyEmail = async (req, res) => {
   }
 };
 export const login = async (req, res) => {
-  res.send("Signup controlelr.");
+  const { email, password } = req.body;
+
+  try {
+    if (!email || !password) {
+      return res.status(400).json("All field are required.");
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "user doesn't exist. please signin first",
+      });
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Password doesn't match.",
+      });
+    }
+    generateTokenAndSetCookie(res, user._id);
+    user.lastLogin = Date.now();
+    await user.save();
+
+    // await sendWelcomeEmail(user.email, user.name);
+    return res.status(200).json({
+      success: true,
+      message: "login successfull.",
+      user: { ...user._doc, password: undefined },
+    });
+  } catch (error) {
+    console.error("Error wehn try to login", error);
+    return res.status(401).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 export const logout = async (req, res) => {
-  res.send("Signup controlelr.");
+  res.clearCookie("token");
+  return res.status(200).json({
+    success: true,
+    message: "Logout successfully.",
+  });
 };
