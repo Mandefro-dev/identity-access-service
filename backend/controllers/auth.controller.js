@@ -1,5 +1,5 @@
 import { User } from "../models/user.model.js";
-import bcrypt from "bcryptjs";
+
 import crypto from "crypto";
 import argon2 from "argon2";
 import { generateVerficationToken } from "../../utils/generateVerificationToken.js";
@@ -223,7 +223,7 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await argon2.hash(password);
     user.password = hashedPassword;
     user.resetPasswordExpiresAt = undefined;
     user.resetPasswordToken = undefined;
