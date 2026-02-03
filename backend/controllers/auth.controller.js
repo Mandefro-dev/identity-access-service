@@ -1,6 +1,7 @@
 import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import argon2 from "argon2";
 import { generateVerficationToken } from "../../utils/generateVerificationToken.js";
 import { generateTokenAndSetCookie } from "../../utils/generateTokenAndSetCookie.js";
 import {
@@ -9,13 +10,16 @@ import {
   sendPasswordResetEmail,
   sendPasswordResetSuccessEmail,
 } from "../mailtrap/emails.js";
+import {
+  signupSchema,
+  loginSchema,
+  verifyEmailSchema,
+} from "../../utils/validationSchemas.js";
 
 export const signup = async (req, res) => {
-  const { name, email, password } = req.body;
   try {
-    if (!email || !name || !password) {
-      throw new Error("All fields are required");
-    }
+    const { email, name, password } = signupSchema.parse(req.body);
+
     const userAlreadyExists = await User.findOne({ email });
 
     if (userAlreadyExists) {
@@ -25,7 +29,8 @@ export const signup = async (req, res) => {
       });
     }
     // const salt = bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await argon2.hash(password);
+    // const hashedPassword = await bcrypt.hash(password, 10);
     const verificationToken = generateVerficationToken();
 
     const user = new User({
@@ -45,10 +50,22 @@ export const signup = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "User create successfully.",
-      user: { ...user._doc, password: undefined },
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (error) {
-    res.status(400).json({
+    if (error.name === "ZodError") {
+      return res.status(400).json({
+        success: false,
+        meesage: "Validation Error",
+        errors: error.errors.map((e) => e.message),
+      });
+    }
+
+    res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -56,8 +73,8 @@ export const signup = async (req, res) => {
 };
 
 export const verifyEmail = async (req, res) => {
-  const { code } = req.body;
   try {
+    const { code } = verifyEmailSchema.parse(req.body);
     const user = await User.findOne({
       verificationToken: code,
       verificationTokenExpiresAt: { $gt: Date.now() },
@@ -79,17 +96,24 @@ export const verifyEmail = async (req, res) => {
       message: "Email sent succesfully.",
     });
   } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.errors.map((e) => e.message),
+      });
+    }
     console.log("Error in verifying email", error);
     res.status(500).json({ success: false, message: "server error" });
   }
 };
 export const login = async (req, res) => {
-  const { email, password } = req.body;
-
   try {
-    if (!email || !password) {
-      return res.status(400).json("All field are required.");
-    }
+    const { email, password } = loginSchema.parse(req.body);
+
+    // if (!email || !password) {
+    //   return res.status(400).json("All field are required.");
+    // }
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
@@ -97,8 +121,7 @@ export const login = async (req, res) => {
         message: "user doesn't exist. please signin first",
       });
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
+    const isPasswordValid = await argon2.verify(user.password, password);
     if (!isPasswordValid) {
       return res.status(400).json({
         success: false,
@@ -116,22 +139,26 @@ export const login = async (req, res) => {
       user: { ...user._doc, password: undefined },
     });
   } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({
+        success: false,
+        message: "validation error",
+        errors: error.errors.map((e) => {
+          e.message;
+        }),
+      });
+    }
     console.error("Error wehn try to login", error);
-    return res.status(401).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 export const forgotPassword = async (req, res) => {
-  const { email } = req.body;
   try {
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Please enter your Email.",
-      });
-    }
+    const { email } = verifyEmailSchema.parse(req.body);
+
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -155,6 +182,13 @@ export const forgotPassword = async (req, res) => {
       message: "Reset password sent to your successfully.",
     });
   } catch (error) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({
+        success: false,
+        message: "validation error",
+        errors: error.errors.map((e) => e.message),
+      });
+    }
     return res.status(400).json({
       success: false,
       message: error.message,
@@ -162,7 +196,7 @@ export const forgotPassword = async (req, res) => {
   }
 };
 export const resetPassword = async (req, res) => {
-  const { password, repeatPassword } = req.body;
+  const { password } = req.body;
   const { token } = req.params;
 
   try {
