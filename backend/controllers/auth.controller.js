@@ -2,6 +2,7 @@ import { User } from "../models/user.model.js";
 
 import crypto from "crypto";
 import argon2 from "argon2";
+import jwt from "jsonwebtoken";
 import { generateVerficationToken } from "../../utils/generateVerificationToken.js";
 import { generateTokenAndSetCookie } from "../../utils/generateTokenAndSetCookie.js";
 import {
@@ -16,7 +17,46 @@ import {
   verifyEmailSchema,
 } from "../../utils/validationSchemas.js";
 import { signAccessToken, signRefreshToken } from "../../utils/token.js";
+import { RefreshToken } from "../models/refreshToken.model.js";
 
+export const refreshToken = async (req, res) => {
+  const token = req.cookies.refreshToken;
+  if (!token) return res.sendStatus(401);
+
+  let payload;
+
+  try {
+    payload = jwt.verify(token, process.env.JWT_REFRESH_TOKEN);
+  } catch (error) {
+    return res.sendStatus(403);
+  }
+  const storedTokens = await RefreshToken.find({ userId: payload.userId });
+
+  //reuse check
+
+  const match = await Promise.any(
+    storedTokens.map((t) => argon2.verify(t.token, token)),
+  ).catch(() => false);
+
+  if (!match) {
+    await RefreshToken.deleteMany({ userId: payload.userId });
+    return res.status(403).json({
+      message: "Refresh token reuse deteced, Login Again",
+    });
+  }
+
+  await RefreshToken.deleteMany({ userId: payload.userId });
+  const newAccessToken = signAccessToken(payload.userId);
+  const newRefreshToken = await signRefreshToken(payload.userId);
+
+  res.cookie("refreshToken", newRefreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  res.json({ accessToken: newAccessToken });
+};
 export const signup = async (req, res) => {
   try {
     const { email, name, password } = signupSchema.parse(req.body);
@@ -137,13 +177,23 @@ export const login = async (req, res) => {
         message: "Password doesn't match.",
       });
     }
-    generateTokenAndSetCookie(res, user._id);
+    // generateTokenAndSetCookie(res, user._id);
+
+    const accessToken = signAccessToken(user._id);
+    const refreshToken = await signRefreshToken(user._id);
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     user.lastLogin = Date.now();
     await user.save();
 
     // await sendWelcomeEmail(user.email, user.name);
     return res.status(200).json({
       success: true,
+      accessToken,
       message: "login successfull.",
       user: { ...user._doc, password: undefined },
     });
@@ -252,7 +302,14 @@ export const resetPassword = async (req, res) => {
   }
 };
 export const logout = async (req, res) => {
-  res.clearCookie("token");
+  const token = req.cookies.refreshToken;
+  if (token) {
+    await RefreshToken.deleteMany({
+      userId: req.userId,
+    });
+  }
+
+  res.clearCookie("refreshToken");
   return res.status(200).json({
     success: true,
     message: "Logout successfully.",
