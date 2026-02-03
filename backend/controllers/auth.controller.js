@@ -15,6 +15,7 @@ import {
   loginSchema,
   verifyEmailSchema,
 } from "../../utils/validationSchemas.js";
+import { signAccessToken, signRefreshToken } from "../../utils/token.js";
 
 export const signup = async (req, res) => {
   try {
@@ -43,12 +44,20 @@ export const signup = async (req, res) => {
     await user.save();
 
     //jwt
-    generateTokenAndSetCookie(res, user._id);
-
+    // generateTokenAndSetCookie(res, user._id);
+    const accessToken = signAccessToken(user._id);
+    const refreshToken = await signRefreshToken(user._id);
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
     await sendverificationEmail(user.email, verificationToken);
 
     res.status(201).json({
       success: true,
+      accessToken,
       message: "User create successfully.",
       user: {
         _id: user._id,
