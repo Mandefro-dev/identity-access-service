@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import argon2 from "argon2";
+
 import { RefreshToken } from "../backend/models/refreshToken.model";
 
 export const signAccessToken = (userId) => {
@@ -10,16 +10,15 @@ export const signAccessToken = (userId) => {
 };
 
 export const signRefreshToken = async (userId) => {
-  const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_TOKEN, {
-    expiresIn: "7d",
-  });
+  const token = crypto.randomBytes(40).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  const hashed = await argon2.hash(refreshToken);
   await RefreshToken.create({
     userId,
-    token: hashed,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    token: tokenHash,
+    expiresAt,
   });
 
-  return refreshToken;
+  return token;
 };

@@ -20,42 +20,56 @@ import { signAccessToken, signRefreshToken } from "../../utils/token.js";
 import { RefreshToken } from "../models/refreshToken.model.js";
 
 export const refreshToken = async (req, res) => {
-  const token = req.cookies.refreshToken;
-  if (!token) return res.sendStatus(401);
-
-  let payload;
-
-  try {
-    payload = jwt.verify(token, process.env.JWT_REFRESH_TOKEN);
-  } catch (error) {
-    return res.sendStatus(403);
+  const incomingToken = req.cookies.refreshToken;
+  if (!incomingToken) {
+    return res.status(401).json({ message: "No token provided" });
   }
-  const storedTokens = await RefreshToken.find({ userId: payload.userId });
-
-  //reuse check
-
-  const match = await Promise.any(
-    storedTokens.map((t) => argon2.verify(t.token, token)),
-  ).catch(() => false);
-
-  if (!match) {
-    await RefreshToken.deleteMany({ userId: payload.userId });
+  const tokenHash = crypto
+    .createHash("sha256")
+    .update(incomingToken)
+    .digest("hex");
+  const tokenDoc = await RefreshToken.findOne({ token: tokenHash });
+  if (!tokenDoc) {
+    res.clearCookie("refreshToken");
+    return res.status(401).json({ message: "Invalid token" });
+  }
+  if (tokenDoc.revoked) {
+    await RefreshToken.deleteMany({ userId: tokenDoc.userId });
+    res.clearCookie("refreshToken");
     return res.status(403).json({
-      message: "Refresh token reuse deteced, Login Again",
+      message: "Security Alert: Token reuse Detected, All sessions revoked",
     });
   }
 
-  await RefreshToken.deleteMany({ userId: payload.userId });
-  const newAccessToken = signAccessToken(payload.userId);
-  const newRefreshToken = await signRefreshToken(payload.userId);
+  if (new Date() > tokenDoc.expiresAt) {
+    await RefreshToken.findByIdAndDelete(tokenDoc._id);
+    res.clearCookie("refreshToken");
+    res.status(401).json({ message: "Token expired" });
+  }
+  const newAccessToken = signAccessToken(tokenDoc.userId);
+  const newRefreshTokenPlain = crypto.randomBytes(40).toString("hex");
+  const newRefreshTokenHash = crypto
+    .createHash("sha256")
+    .update(newRefreshTokenPlain)
+    .digest("hex");
 
-  res.cookie("refreshToken", newRefreshToken, {
+  tokenDoc.revoked = true;
+  tokenDoc.replaceByToken = newRefreshTokenHash;
+  await tokenDoc.save();
+
+  await RefreshToken.create({
+    userId: tokenDoc.userId,
+    token: newRefreshTokenHash,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+  res.cookie("refreshToken", newRefreshTokenPlain, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
-  res.json({ accessToken: newAccessToken });
+
+  res.status(200).json({ accessToken: newAccessToken });
 };
 export const signup = async (req, res) => {
   try {
@@ -302,11 +316,13 @@ export const resetPassword = async (req, res) => {
   }
 };
 export const logout = async (req, res) => {
-  const token = req.cookies.refreshToken;
-  if (token) {
-    await RefreshToken.deleteMany({
-      userId: req.userId,
-    });
+  const incomingToken = req.cookies.refreshToken;
+  if (incomingToken) {
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(incomingToken)
+      .digest("hex");
+    await RefreshToken.findOneAndDelete({ token: tokenHash });
   }
 
   res.clearCookie("refreshToken");

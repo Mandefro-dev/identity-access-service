@@ -11,15 +11,18 @@ const refreshTokenSchema = new mongoose.Schema(
     token: {
       type: String,
       required: true,
+      index: true,
     },
     expiresAt: {
       type: Date,
       required: true,
     },
+    revoked: { type: Boolean, default: false },
+    replaceByToken: { type: String },
   },
   {
     timestamps: true,
   },
 );
-
+refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 export const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
