@@ -1,3 +1,4 @@
+import { setSourceMapsSupport } from "module";
 import { RefreshToken } from "../models/refreshToken.model";
 import crypto from "crypto";
 
@@ -9,24 +10,33 @@ export const getActiveSessions = async (req, res) => {
       expiresAt: { $gt: Date.now() },
     })
       .select("ipAddress deviceInfo lastActive createdAt _id")
-      .sort({ lastActive: -1 });
+      .sort({ lastActive: -1 })
+      .lean();
 
     //whcih session is the current one
 
     const currentToken = req.cookies.refreshToken;
-    let currentSessionId = null;
+    let currentTokenHash = "";
     if (currentToken) {
-      const hash = crypto
+      currentTokenHash = crypto
         .createHash("sha256")
         .update(currentToken)
         .digest("hex");
-
-      const currentSession = sessions.find((s) => s.token === hash);
     }
+
+    const sessionData = sessions.map((s) => {
+      const isCurrent = s.token === currentTokenHash;
+      const { token, ...rest } = s;
+
+      return {
+        ...rest,
+        isCurrent,
+      };
+    });
 
     res.status(200).json({
       success: true,
-      sessions,
+      sessions: sessionData,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
