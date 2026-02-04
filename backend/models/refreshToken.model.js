@@ -19,6 +19,15 @@ const refreshTokenSchema = new mongoose.Schema(
     },
     revoked: { type: Boolean, default: false },
     replaceByToken: { type: String },
+    ipAddress: { type: String },
+    userAgent: { type: String },
+    deviceInfo: {
+      os: { type: String },
+      browser: { type: string },
+      device: { type: string },
+    },
+
+    lastActive: { type: Date, default: Date.now },
   },
   {
     timestamps: true,

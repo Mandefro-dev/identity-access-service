@@ -100,7 +100,7 @@ export const signup = async (req, res) => {
     //jwt
     // generateTokenAndSetCookie(res, user._id);
     const accessToken = signAccessToken(user._id);
-    const refreshToken = await signRefreshToken(user._id);
+    const refreshToken = await signRefreshToken(user._id, req);
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -194,7 +194,7 @@ export const login = async (req, res) => {
     // generateTokenAndSetCookie(res, user._id);
 
     const accessToken = signAccessToken(user._id);
-    const refreshToken = await signRefreshToken(user._id);
+    const refreshToken = await signRefreshToken(user._id, req);
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
