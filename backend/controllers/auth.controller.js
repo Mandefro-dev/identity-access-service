@@ -61,6 +61,10 @@ export const refreshToken = async (req, res) => {
     userId: tokenDoc.userId,
     token: newRefreshTokenHash,
     expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    ipAddress: tokenDoc.ipAddress,
+    userAgent: tokenDoc.userAgent,
+    deviceInfo: tokenDoc.deviceInfo,
+    lastActive: new Date(),
   });
   res.cookie("refreshToken", newRefreshTokenPlain, {
     httpOnly: true,

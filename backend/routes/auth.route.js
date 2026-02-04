@@ -9,6 +9,10 @@ import {
   checkAuth,
   refreshToken,
 } from "../controllers/auth.controller.js";
+import {
+  getActiveSessions,
+  revokeSession,
+} from "../controllers/session.controller.js";
 import { verifyAccessToken } from "../middleware/verifyAccessToken.js";
 
 const router = express.Router();
@@ -20,4 +24,6 @@ router.post("/verify-email", verifyEmail);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 router.post("/refresh", refreshToken);
+router.get("/sessions", verifyAccessToken, getActiveSessions);
+router.delete("/sessions/:sessionId", verifyAccessToken, revokeSession);
 export default router;
