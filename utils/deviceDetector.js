@@ -1,4 +1,4 @@
-import UAParser from "ua-parser-js";
+import { UAParser } from "ua-parser-js";
 
 export const getDeviceInfo = (req) => {
   const userAgent = req.headers["user-agent"];

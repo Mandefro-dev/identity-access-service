@@ -128,7 +128,7 @@ export const signup = async (req, res) => {
       return res.status(400).json({
         success: false,
         meesage: "Validation Error",
-        errors: error.errors.map((e) => e.message),
+        error: error.message,
       });
     }
 
@@ -167,7 +167,7 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Validation error",
-        errors: error.errors.map((e) => e.message),
+        errors: error.message,
       });
     }
     console.log("Error in verifying email", error);

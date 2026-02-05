@@ -1,15 +1,14 @@
-import { setSourceMapsSupport } from "module";
-import { RefreshToken } from "../models/refreshToken.model";
+import { RefreshToken } from "../models/refreshToken.model.js";
 import crypto from "crypto";
 
 export const getActiveSessions = async (req, res) => {
   try {
     const sessions = await RefreshToken.find({
       userId: req.userId,
-      revoke: false,
+      revoked: false,
       expiresAt: { $gt: Date.now() },
     })
-      .select("ipAddress deviceInfo lastActive createdAt _id")
+      .select("ipAddress deviceInfo lastActive createdAt _id,token")
       .sort({ lastActive: -1 })
       .lean();
 

@@ -12,5 +12,5 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 export const verifyEmailSchema = z.object({
-  code: z.string().length(6, "Verification code msut be 6 digits."),
+  code: z.string().length(7, "Verification code msut be 6 digits."),
 });
