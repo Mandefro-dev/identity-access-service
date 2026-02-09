@@ -197,6 +197,25 @@ export const login = async (req, res) => {
     }
     // generateTokenAndSetCookie(res, user._id);
 
+    if (user.isMfaEnabled) {
+      const mfaToken = jwt.sign(
+        {
+          userId: user._id,
+          role: "mfa_pending",
+        },
+        process.env.JWT_ACCESS_SECRET,
+        {
+          expiresIn: "3m",
+        },
+      );
+
+      return res.status(200).json({
+        success: true,
+        mfaRequired: true,
+        mfaToken,
+        message: "Please enter your 2FA code.",
+      });
+    }
     const accessToken = signAccessToken(user._id);
     const refreshToken = await signRefreshToken(user._id, req);
     res.cookie("refreshToken", refreshToken, {

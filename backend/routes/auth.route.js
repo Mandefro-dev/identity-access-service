@@ -14,8 +14,16 @@ import {
   revokeSession,
 } from "../controllers/session.controller.js";
 import { verifyAccessToken } from "../middleware/verifyAccessToken.js";
+import {
+  enableMfa,
+  generateMfaSecret,
+  verifyMfaLogin,
+} from "../controllers/mfa.controller.js";
 
 const router = express.Router();
+router.post("/mfa/setup", verifyAccessToken, generateMfaSecret);
+router.post("/mfa/enable", verifyAccessToken, enableMfa);
+router.post("/mfa/verify-login", verifyMfaLogin);
 router.get("/check-auth", verifyAccessToken, checkAuth);
 router.post("/signup", signup);
 router.post("/login", login);
