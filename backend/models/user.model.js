@@ -24,6 +24,20 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isMfaEnabled: { type: Boolean, default: false },
+    mfaSecret: { type: String },
+    backupCodes: [
+      {
+        code: {
+          type: String,
+          required: true,
+        },
+        used: {
+          type: Boolean,
+          default: false,
+        },
+      },
+    ],
     resetPasswordToken: String,
     resetPasswordExpiresAt: Date,
     verificationToken: String,
