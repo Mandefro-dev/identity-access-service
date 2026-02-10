@@ -20,8 +20,9 @@
 //   }
 // };
 import jwt from "jsonwebtoken";
+import { User } from "../models/user.model.js";
 
-export const verifyAccessToken = (req, res, next) => {
+export const verifyAccessToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -31,9 +32,43 @@ export const verifyAccessToken = (req, res, next) => {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    const user = await User.findById(payload.userId).select("role email _id");
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User belongin to this token no loneger exists. ",
+      });
+    }
+    req.user = user;
     req.userId = payload.userId;
     next();
   } catch (error) {
     return res.status(401).json({ message: "Token expired" });
   }
 };
+
+// export const verify = (req, res, next) => {
+//   const authHeader = req.headers.authorization;
+//   if (!authHeader && !authHeader.startsWith("Bearer")) {
+//     res.status(402).json({
+//       success: false,
+//       message: "unauthorized action.",
+//     });
+//   }
+//   const token = authHeader.split(" ")[1];
+//   try {
+//     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+//     const user = User.findById(payload.userId).select("role email _id");
+//     if(!user){
+//       return res.status(401).json({success:false,message:"user belogin to this token,no longer exists."})
+//     }
+//     req.user = user;
+//     req.userId = payload.userId;
+//     next();
+//   } catch (error) {
+//     return res.status(401).json({
+//       success: false,
+//       message: "Token expired.",
+//     });
+//   }
+// };

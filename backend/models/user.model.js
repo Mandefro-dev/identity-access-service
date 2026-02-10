@@ -20,12 +20,32 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
+    role: {
+      type: String,
+      enum: ["user", "moderator", "admin"],
+      default: "user",
+    },
     isVerified: {
       type: Boolean,
       default: false,
     },
+    accountStatus: {
+      type: String,
+      enum: ["active", "suspended", "pro"],
+      default: "active",
+    },
+    trustScore: { type: Number, default: 10 },
+
     isMfaEnabled: { type: Boolean, default: false },
+
     mfaSecret: { type: String },
+    lastLoginIp: String,
+    department: {
+      type: String,
+      enum: ["engineering", "billing", "support", "none"],
+      default: "none",
+    },
+
     backupCodes: [
       {
         code: {
