@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import { connectDB } from "./db/connectDB.js";
 import authRoutes from "./routes/auth.route.js";
+import adminRoutes from "./routes/admin.routes.js";
+import postRoutes from "./routes/post.routes.js";
 
 dotenv.config();
 
@@ -17,6 +19,8 @@ app.get("/", (req, res) => {
   return res.send("Hello world");
 });
 app.use("/api/auth", authRoutes);
+app.use("api/admin", adminRoutes);
+app.use("api/post", postRoutes);
 
 app.listen(PORT, () => {
   connectDB();

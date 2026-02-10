@@ -1,10 +1,10 @@
 import express from "express";
-import { Post } from "//";
-import { verifyAccessToken } from "../middleware/verifyAccessToken";
+import { Post } from "../models/post.model.js";
+import { verifyAccessToken } from "../middleware/verifyAccessToken.js";
 import {
   canModifyResource,
   enviromentGuard,
-} from "../middleware/abac.middleware";
+} from "../middleware/abac.middleware.js";
 
 const postRouter = express.Router();
 
