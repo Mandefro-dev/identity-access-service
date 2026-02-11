@@ -3,6 +3,7 @@ import { User } from "../models/user.model.js";
 import crypto from "crypto";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
+import { googleAuthService } from "../services/auth.services.js";
 import { generateVerficationToken } from "../../utils/generateVerificationToken.js";
 import { generateTokenAndSetCookie } from "../../utils/generateTokenAndSetCookie.js";
 import {
@@ -19,6 +20,50 @@ import {
 import { signAccessToken, signRefreshToken } from "../../utils/token.js";
 import { RefreshToken } from "../models/refreshToken.model.js";
 
+export const googleCallback = async (req, res) => {
+  try {
+    const { code } = req.body;
+
+    if (!code)
+      return res.status(400).json({
+        message: "No code provided.",
+      });
+
+    const user = await googleAuthService(code);
+    const accessToken = signAccessToken(user._id);
+    const refreshToken = await signRefreshToken(user._id, req);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Google Login Successful",
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        avater: user.avator,
+      },
+    });
+  } catch (error) {
+    console.error("Google Auth Eroor", error);
+    res.status(401).json({
+      message: "Google authentication failed.",
+    });
+  }
+};
 export const refreshToken = async (req, res) => {
   const incomingToken = req.cookies.refreshToken;
   if (!incomingToken) {

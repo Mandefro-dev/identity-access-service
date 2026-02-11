@@ -10,7 +10,6 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
     },
     name: {
       type: String,
@@ -62,6 +61,19 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpiresAt: Date,
     verificationToken: String,
     verificationTokenExpiresAt: Date,
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    githubId: { type: String, unique: true, sparse: true },
+    avatar: { type: String },
+    authProvider: {
+      type: String,
+      enum: ["local", "google", "github", "mixed"],
+      default: "local",
+    },
   },
   { timestamps: true },
 );

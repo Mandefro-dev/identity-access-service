@@ -8,6 +8,7 @@ import {
   resetPassword,
   checkAuth,
   refreshToken,
+  googleCallback,
 } from "../controllers/auth.controller.js";
 import {
   getActiveSessions,
@@ -21,6 +22,7 @@ import {
 } from "../controllers/mfa.controller.js";
 
 const router = express.Router();
+router.post("/google", googleCallback);
 router.post("/mfa/setup", verifyAccessToken, generateMfaSecret);
 router.post("/mfa/enable", verifyAccessToken, enableMfa);
 router.post("/mfa/verify-login", verifyMfaLogin);
