@@ -48,16 +48,39 @@ GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/callback```
 
 🚪 Core AuthenticationMethodEndpoint   Description
 
-POST/api/auth/signup                  Register a new user
-POST/api/auth/logi                    Secure login (Issues Cookies)
-GET/api/auth/check-auth               Verify token & return user context
+Core Auth
+POST /api/auth/signup - Body: { "email": "test@test.com", "password": "pass", "name": "Bro" }
+
+POST /api/auth/login - Body: { "email": "test@test.com", "password": "pass" }
+
+POST /api/auth/logout - Kills your current session.
+
+GET /api/auth/check-auth - Verifies your token and returns your user data.
+
+Tokens & Social
+
+POST /api/auth/refresh - Hits the server to get a new Access Token using your Refresh cookie.
+
+POST /api/auth/google - Body: { "code": "oauth_code_from_google" } (Exchanges code for session).
+
+MFA / 2FA   requires Login
+POST /api/auth/mfa/setup - Generates a Secret and a QR code base64 string.
+
+POST /api/auth/mfa/enable - Body: { "token": "123456" } (Verifies the code from your Authenticator app).
+
+POST /api/auth/mfa/verify-login - Body: { "email": "test@test.com", "token": "123456" } (Use this if login says MFA is required).
+
+ Session Management (Requires login)
+GET /api/auth/sessions - Returns an array of every device currently logged into your account.
+
+DELETE /api/auth/sessions/:sessionId - Pass the ID from the previous route to kick that specific device offline.
+
+ The Recovery (Emails)
+POST /api/auth/verify-email - Body: { "token": "verification_token_from_email" }
+
+POST /api/auth/forgot-password - Body: { "email": "test@test.com" }
 
 
-🔐 Security & MFAMethodEndpoint       Description
-POST/api/auth/mfa/setup               Generate QR Code
-POST/api/auth/mfa/enable              Verify & Activate 2FA
-GET/api/auth/sessions                 List all active device sessions
-DELETE/api/auth/sessions/:id          Remote session revocation
 
 🏗️ Technical Architecture
 Runtime: Node.js (ESM)
