@@ -28,21 +28,24 @@ cd identity-access-service
 # 3. Install dependencies
 npm install
 
-# 4. Start the engine
+# 4. Start 
 npm run dev
-🔑 Environment ConfigurationCreate a .env file in the root directory:Code snippetPORT=5000
+🔑 Environment Configuration
+Create a .env file in the root directory:Code snippet
+PORT=5000
 MONGO_URI=your_mongodb_uri
-
 # JWT Configuration
 JWT_ACCESS_SECRET=your_access_secret
 JWT_REFRESH_SECRET=your_refresh_secret
-
+MAILTRAP_TOKEN=mailtrap token
+MAILTRAP_ACCOUNT_ID=account id
 # Google OAuth
 GOOGLE_CLIENT_ID=your_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_secret_key
 GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/callback```
 
-🎯 Postman 
+🎯 Postman
+
 🚪 Core AuthenticationMethodEndpoint   Description
 
 POST/api/auth/signup                  Register a new user
