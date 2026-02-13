@@ -1,8 +1,7 @@
-# 🛡️ Iron Vault: Advanced IAM System
+Advanced AUTH System
 
-> **Status:** Operational 🚀 | **Developer:** Mandefro-dev
 
-This is a professional-grade **Identity and Access Management (IAM)** system. It doesn't just "log users in"—it tracks their devices, handles multi-factor security, and manages complex access rules using RBAC and ABAC.
+This is a professional-grade AUTH system. It doesn't just "log users in"—it tracks their devices, handles multi-factor security, and manages complex access rules using RBAC and ABAC.
 
 ---
 
@@ -10,8 +9,8 @@ This is a professional-grade **Identity and Access Management (IAM)** system. It
 
 - **🧠 Hybrid Security:** Combines **RBAC** (Role-Based) and **ABAC** (Attribute-Based). It checks if a resource is _locked_ before allowing an edit, even for the owner.
 - **🎭 Social Sync:** Custom **Google OAuth2** flow that merges social profiles with existing local accounts.
-- **📡 Session Radar:** Real-time tracking of IP addresses, Browsers, and OS via `deviceDetector`.
-- **🔐 MFA Shield:** TOTP (Time-based One-Time Password) integration.
+- **📡 Session R:** Real-time tracking of IP addresses, Browsers, and OS via `deviceDetector`.
+- **🔐 MFA :** TOTP (Time-based One-Time Password) integration.
 
 ---
 
@@ -41,6 +40,25 @@ JWT_REFRESH_SECRET=your_refresh_secret
 # Google OAuth
 GOOGLE_CLIENT_ID=your_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_secret_key
-GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/callback
-🎯 Postman Playbook (API Hit List)🚪 Core AuthenticationMethodEndpointDescriptionPOST/api/auth/signupRegister a new userPOST/api/auth/loginSecure login (Issues Cookies)GET/api/auth/check-authVerify token & return user context🔐 Security & MFAMethodEndpointDescriptionPOST/api/auth/mfa/setupGenerate QR CodePOST/api/auth/mfa/enableVerify & Activate 2FAGET/api/auth/sessionsList all active device sessionsDELETE/api/auth/sessions/:idRemote session revocation🏗️ Technical ArchitectureRuntime: Node.js (ESM)Database: MongoDBAuth: JWT + HttpOnly CookiesValidation: Zod / JoiSecurity: Argon2/BCrypt + Crypto
-```
+GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/callback```
+
+🎯 Postman 
+🚪 Core AuthenticationMethodEndpoint   Description
+
+POST/api/auth/signup                  Register a new user
+POST/api/auth/logi                    Secure login (Issues Cookies)
+GET/api/auth/check-auth               Verify token & return user context
+
+
+🔐 Security & MFAMethodEndpoint       Description
+POST/api/auth/mfa/setup               Generate QR Code
+POST/api/auth/mfa/enable              Verify & Activate 2FA
+GET/api/auth/sessions                 List all active device sessions
+DELETE/api/auth/sessions/:id          Remote session revocation
+
+🏗️ Technical Architecture
+Runtime: Node.js (ESM)
+Database: MongoDB
+Auth: JWT + HttpOnly Cookies
+Validation: Zod / Joi
+Security: Argon2/BCrypt + Crypto
