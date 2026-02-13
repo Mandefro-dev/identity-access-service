@@ -1,20 +1,46 @@
-🛡️ Advanced Identity & Access Management (IAM)The Fortress BackendThis isn't just a login script. It’s a high-performance Identity Service built to handle complex security requirements. From MFA to Session Hijacking protection, I've built the "Iron Vault" to be bulletproof.🚀 The "Senior" FeaturesFeatureDescription🧠 RBAC + ABACHybrid security. Checks Role (Admin/User) + Attributes (Owner/Locked/Verified).🎭 The SocialiteSmart Google OAuth2. Automatically links Google profiles to existing email accounts.📡 Radar SessionsReal-time device tracking (IP, OS, Browser) with remote "Kill-Switch" capability.🔐 MFA ShieldTime-based One-Time Password (TOTP) integration for 2FA security.⏳ Token Rotation15m Access Tokens + 7d Rotating Refresh Tokens with automatic reuse detection.🛠️ Step-by-Step Setup1. Clone & InstallBashgit clone https://github.com/Mandefro-dev/identity-access-service.git
+# 🛡️ Iron Vault: Advanced IAM System
+
+> **Status:** Operational 🚀 | **Developer:** Mandefro-dev
+
+This is a professional-grade **Identity and Access Management (IAM)** system. It doesn't just "log users in"—it tracks their devices, handles multi-factor security, and manages complex access rules using RBAC and ABAC.
+
+---
+
+## ✨ Features Breakdown
+
+- **🧠 Hybrid Security:** Combines **RBAC** (Role-Based) and **ABAC** (Attribute-Based). It checks if a resource is _locked_ before allowing an edit, even for the owner.
+- **🎭 Social Sync:** Custom **Google OAuth2** flow that merges social profiles with existing local accounts.
+- **📡 Session Radar:** Real-time tracking of IP addresses, Browsers, and OS via `deviceDetector`.
+- **🔐 MFA Shield:** TOTP (Time-based One-Time Password) integration.
+
+---
+
+## 🛠️ Installation & Setup
+
+To get the "Terminal Vibe" running locally:
+
+```bash
+# 1. Clone the fortress
+git clone [https://github.com/Mandefro-dev/identity-access-service.git](https://github.com/Mandefro-dev/identity-access-service.git)
+
+# 2. Enter the chamber
 cd identity-access-service
-npm install 2. The Secret Keys (.env)Create a .env file in your root directory:Ini, TOMLPORT=5000
-MONGO_URI=your_mongodb_connection_string
 
-# JWT Secrets
+# 3. Install dependencies
+npm install
 
-JWT_ACCESS_SECRET=super_secret_access_key
-JWT_REFRESH_SECRET=super_secret_refresh_key
+# 4. Start the engine
+npm run dev
+🔑 Environment ConfigurationCreate a .env file in the root directory:Code snippetPORT=5000
+MONGO_URI=your_mongodb_uri
 
-# Google OAuth (Cloud Console)
+# JWT Configuration
+JWT_ACCESS_SECRET=your_access_secret
+JWT_REFRESH_SECRET=your_refresh_secret
 
+# Google OAuth
 GOOGLE_CLIENT_ID=your_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_secret_key
 GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/callback
-
-# Client
-
-CLIENT_URL=http://localhost:5173 3. IgniteBashnpm run dev
-Server Status: Running on http://localhost:5000 🚀🎯 Postman Playbook (API Hit List)🚪 Core Auth GatePOST /api/auth/signupBody: { "email": "user@test.com", "password": "secure", "name": "Dev" }POST /api/auth/loginBody: { "email": "user@test.com", "password": "secure" }GET /api/auth/check-authVerifies JWT and returns User Context.🛡️ MFA & RecoveryPOST /api/auth/mfa/setupGenerates QR code for Authenticator apps.POST /api/auth/mfa/enableBody: { "token": "123456" }POST /api/auth/forgot-passwordTriggers secure recovery email.📡 Session ControlGET /api/auth/sessions _ Lists every device logged into your account.DELETE /api/auth/sessions/:id _ Forces a remote logout for that specific device.🏗️ ArchitectureLanguage: Node.js (ESM)Framework: Express.jsDatabase: MongoDB + MongooseSecurity: JWT, Crypto, Speakeasy, BCrypt<p align="center"><b>Built with ❤️ and zero spaghetti code.</b><sub>Check out the Frontend repository for the React implementation.</sub></p>
+🎯 Postman Playbook (API Hit List)🚪 Core AuthenticationMethodEndpointDescriptionPOST/api/auth/signupRegister a new userPOST/api/auth/loginSecure login (Issues Cookies)GET/api/auth/check-authVerify token & return user context🔐 Security & MFAMethodEndpointDescriptionPOST/api/auth/mfa/setupGenerate QR CodePOST/api/auth/mfa/enableVerify & Activate 2FAGET/api/auth/sessionsList all active device sessionsDELETE/api/auth/sessions/:idRemote session revocation🏗️ Technical ArchitectureRuntime: Node.js (ESM)Database: MongoDBAuth: JWT + HttpOnly CookiesValidation: Zod / JoiSecurity: Argon2/BCrypt + Crypto
+```
